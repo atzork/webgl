@@ -26,6 +26,13 @@ export default class Main {
         }
         resizeCanvas(this.gl.canvas)
 
+        // window.addEventListener('resize', () => {
+        //     requestAnimationFrame(() => {
+        //         resizeCanvas(this.gl.canvas)
+        //         this.drawRectangle(vertexShader, fragmentShader)
+        //     })
+        // })
+
         this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);
 
         const vertexShaderSource = document.getElementById('vertical-shader-2d').innerText
