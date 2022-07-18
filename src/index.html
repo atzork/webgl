@@ -29,7 +29,10 @@
     }
 </script>
 
-<script type="text/javascript" src="main.js"></script>
+<script type="module">
+    import Main from './main.js';
+    window.onload = () => new Main();
+</script>
 
 </body>
 </html>
