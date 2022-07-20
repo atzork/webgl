@@ -13,6 +13,10 @@ function resizeCanvas(canvas) {
     }
 }
 
+function randomInt(range) {
+    return Math.floor(Math.random() * range)
+}
+
 export default class Main {
     gl;
 
@@ -49,20 +53,12 @@ export default class Main {
 
         const positionAttributeLocation = this.gl.getAttribLocation(program, 'a_position')
         const resolutionUniformLocation = this.gl.getUniformLocation(program, 'u_resolution')
+        const colorUniformLocation = this.gl.getUniformLocation(program, 'u_color')
 
         this.clearCanvas()
 
         const positionBuffer = this.gl.createBuffer();
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, positionBuffer);
-        const positions = [
-            10, 20,
-            80, 20,
-            10, 30,
-            10, 30,
-            80, 20,
-            80, 30,
-        ]
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(positions), this.gl.STATIC_DRAW)
 
         this.gl.useProgram(program)
 
@@ -75,7 +71,30 @@ export default class Main {
         const stride = 0
         let offset = 0
         this.gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset)
-        this.drawPrimitive(6);
+
+        const arr = new Array(50).fill('');
+        arr.forEach(() => {
+            this.setRectangle(randomInt(300), randomInt(300), randomInt(300), randomInt(300))
+            this.gl.uniform4f(colorUniformLocation, Math.random(), Math.random(), Math.random(), 1)
+            this.drawPrimitive(6);
+        })
+
+    }
+
+    setRectangle(x, y, width, height) {
+        const x1 = x;
+        const x2 = x + width;
+        const y1 = y;
+        const y2 = y + height;
+
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array([
+            x1, y1,
+            x2, y1,
+            x1, y2,
+            x1, y2,
+            x2, y1,
+            x2, y2
+        ]), this.gl.STATIC_DRAW)
     }
 
     drawPrimitive(count, type, offset = 0) {
