@@ -39,46 +39,49 @@ export default class Main {
 
         this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);
 
-        const vertexShaderSource = document.getElementById('vertical-shader-2d').innerText
-        const fragmentShaderSource = document.getElementById('fragment-shader-2d').innerText
-        const vertexShader = this.createShader(this.gl.VERTEX_SHADER, vertexShaderSource);
-        const fragmentShader = this.createShader(this.gl.FRAGMENT_SHADER, fragmentShaderSource)
+        this.loadShaderSources().then(([vertexShaderSource, fragmentShaderSource]) => {
+            const vertexShader = this.createShader(this.gl.VERTEX_SHADER, vertexShaderSource);
+            const fragmentShader = this.createShader(this.gl.FRAGMENT_SHADER, fragmentShaderSource)
 
-        this.drawRectangle(vertexShader, fragmentShader);
+            const program = this.createProgram(vertexShader, fragmentShader)
+            const locations = {
+                positionLocation: this.gl.getAttribLocation(program, 'a_position'),
+                resolutionLocation: this.gl.getUniformLocation(program, 'u_resolution'),
+                colorLocation: this.gl.getUniformLocation(program, 'u_color')
+            }
+            const positionBuffer = this.gl.createBuffer();
+            const rectangleSettings = {
+                translation: [0, 0],
+                width: 100,
+                height: 30,
+                color: [Math.random(),Math.random(),Math.random(),1]
+            }
+
+            this.drawScene(program, positionBuffer, locations, rectangleSettings);
+        })
     }
 
-    drawRectangle(vertexShader, fragmentShader) {
-
-        const program = this.createProgram(vertexShader, fragmentShader)
-
-        const positionAttributeLocation = this.gl.getAttribLocation(program, 'a_position')
-        const resolutionUniformLocation = this.gl.getUniformLocation(program, 'u_resolution')
-        const colorUniformLocation = this.gl.getUniformLocation(program, 'u_color')
-
+    drawScene(program, positionBuffer, locations, rectangleSettings) {
+        resizeCanvas(this.gl.canvas);
         this.clearCanvas()
 
-        const positionBuffer = this.gl.createBuffer();
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, positionBuffer);
-
+        this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height)
         this.gl.useProgram(program)
-
-        this.gl.enableVertexAttribArray(positionAttributeLocation)
-        this.gl.uniform2f(resolutionUniformLocation, this.gl.canvas.width, this.gl.canvas.height)
-
-        const size = 2
-        const type = this.gl.FLOAT
-        const normalize = false
-        const stride = 0
-        let offset = 0
-        this.gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset)
-
-        const arr = new Array(50).fill('');
-        arr.forEach(() => {
-            this.setRectangle(randomInt(300), randomInt(300), randomInt(300), randomInt(300))
-            this.gl.uniform4f(colorUniformLocation, Math.random(), Math.random(), Math.random(), 1)
-            this.drawPrimitive(6);
-        })
-
+        this.gl.enableVertexAttribArray(locations.positionLocation)
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, positionBuffer)
+        this.setRectangle(
+            rectangleSettings.translation[0], rectangleSettings.translation[0],
+            rectangleSettings.width, rectangleSettings.height
+        )
+        const size = 2;
+        const type = this.gl.FLOAT;
+        const normalize = false;
+        const stride = 0;
+        const offset = 0;
+        this.gl.vertexAttribPointer(locations.positionLocation, size, type, normalize, stride, offset)
+        this.gl.uniform2f(locations.resolutionLocation, this.gl.canvas.width, this.gl.canvas.height)
+        this.gl.uniform4fv(locations.colorLocation, rectangleSettings.color)
+        this.drawPrimitive(6)
     }
 
     setRectangle(x, y, width, height) {
@@ -105,6 +108,14 @@ export default class Main {
     clearCanvas() {
         this.gl.clearColor(0,0,0,0);
         this.gl.clear(this.gl.COLOR_BUFFER_BIT)
+    }
+
+    loadShaderSources() {
+        const vertex$ = fetch('vertex-shader-2d.glsl')
+            .then((response) => response.text() )
+        const fragment$ = fetch('fragment-shader-2d.glsl')
+            .then((response) => response.text() )
+        return Promise.all([vertex$, fragment$])
     }
 
     createShader(type, source) {
