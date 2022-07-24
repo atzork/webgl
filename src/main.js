@@ -17,6 +17,13 @@ function randomInt(range) {
     return Math.floor(Math.random() * range)
 }
 
+function getSinCosByAngleDeg(degrees) {
+    const radians = degrees * Math.PI / 180
+    const sin = Math.sin(radians)
+    const cos = Math.cos(radians)
+    return [sin, cos]
+}
+
 export default class Main {
     gl;
 
@@ -48,20 +55,39 @@ export default class Main {
                 positionLocation: this.gl.getAttribLocation(program, 'a_position'),
                 resolutionLocation: this.gl.getUniformLocation(program, 'u_resolution'),
                 colorLocation: this.gl.getUniformLocation(program, 'u_color'),
-                transitionLocation: this.gl.getUniformLocation(program, 'u_transition')
+                transitionLocation: this.gl.getUniformLocation(program, 'u_transition'),
+                rotationPosition: this.gl.getUniformLocation(program, 'u_rotation')
             }
             const positionBuffer = this.gl.createBuffer();
             const rectangleSettings = {
-                translation: [33, 220],
-                x: 0, y: 0,
+                translation: [400, 450],
+                rotation: getSinCosByAngleDeg(220),
+                x: 10, y: 20,
                 width: 100,
                 height: 30,
                 color: [Math.random(),Math.random(),Math.random(),1]
             }
 
             this.gl.bindBuffer(this.gl.ARRAY_BUFFER, positionBuffer)
-            this.setGeometry(rectangleSettings.x,rectangleSettings.y)
+            this.setGeometry(rectangleSettings.x, rectangleSettings.y)
             this.drawScene(program, locations, rectangleSettings);
+            this.animate(program, locations, rectangleSettings, 0)
+        })
+    }
+
+    animate(program, locations, rectangleSettings, angel) {
+        requestAnimationFrame(() => {
+            const rotation = getSinCosByAngleDeg(angel)
+            this.drawScene(
+                program, locations,
+                {...rectangleSettings,
+                    rotation: rotation,
+                    color: [rotation[0], rotation[1],rotation[1],1]
+                })
+            angel++;
+            if (angel < 360) {
+                this.animate(program, locations, rectangleSettings, angel)
+            }
         })
     }
 
@@ -77,6 +103,7 @@ export default class Main {
         //     rectangleSettings.translation[0], rectangleSettings.translation[0],
         //     rectangleSettings.width, rectangleSettings.height
         // )
+
         const size = 2;
         const type = this.gl.FLOAT;
         const normalize = false;
@@ -86,6 +113,7 @@ export default class Main {
         this.gl.uniform2f(locations.resolutionLocation, this.gl.canvas.width, this.gl.canvas.height)
         this.gl.uniform4fv(locations.colorLocation, rectangleSettings.color)
         this.gl.uniform2fv(locations.transitionLocation, rectangleSettings.translation)
+        this.gl.uniform2fv(locations.rotationPosition, rectangleSettings.rotation)
         this.drawPrimitive(18)
     }
 
