@@ -47,32 +47,36 @@ export default class Main {
             const locations = {
                 positionLocation: this.gl.getAttribLocation(program, 'a_position'),
                 resolutionLocation: this.gl.getUniformLocation(program, 'u_resolution'),
-                colorLocation: this.gl.getUniformLocation(program, 'u_color')
+                colorLocation: this.gl.getUniformLocation(program, 'u_color'),
+                transitionLocation: this.gl.getUniformLocation(program, 'u_transition')
             }
             const positionBuffer = this.gl.createBuffer();
             const rectangleSettings = {
-                translation: [0, 0],
+                translation: [33, 220],
+                x: 0, y: 0,
                 width: 100,
                 height: 30,
                 color: [Math.random(),Math.random(),Math.random(),1]
             }
 
-            this.drawScene(program, positionBuffer, locations, rectangleSettings);
+            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, positionBuffer)
+            this.setGeometry(rectangleSettings.x,rectangleSettings.y)
+            this.drawScene(program, locations, rectangleSettings);
         })
     }
 
-    drawScene(program, positionBuffer, locations, rectangleSettings) {
+    drawScene(program, locations, rectangleSettings) {
         resizeCanvas(this.gl.canvas);
         this.clearCanvas()
 
         this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height)
         this.gl.useProgram(program)
         this.gl.enableVertexAttribArray(locations.positionLocation)
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, positionBuffer)
-        this.setRectangle(
-            rectangleSettings.translation[0], rectangleSettings.translation[0],
-            rectangleSettings.width, rectangleSettings.height
-        )
+
+        // this.setRectangle(
+        //     rectangleSettings.translation[0], rectangleSettings.translation[0],
+        //     rectangleSettings.width, rectangleSettings.height
+        // )
         const size = 2;
         const type = this.gl.FLOAT;
         const normalize = false;
@@ -81,7 +85,36 @@ export default class Main {
         this.gl.vertexAttribPointer(locations.positionLocation, size, type, normalize, stride, offset)
         this.gl.uniform2f(locations.resolutionLocation, this.gl.canvas.width, this.gl.canvas.height)
         this.gl.uniform4fv(locations.colorLocation, rectangleSettings.color)
-        this.drawPrimitive(6)
+        this.gl.uniform2fv(locations.transitionLocation, rectangleSettings.translation)
+        this.drawPrimitive(18)
+    }
+
+    setGeometry(x, y) {
+        const width = 100
+        const height = 150
+        const thickness = 30
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array([
+            x, y,
+            x + thickness, y,
+            x, y + height,
+            x, y + height,
+            x + thickness, y,
+            x + thickness, y + height,
+
+            x + thickness, y,
+            x + width, y,
+            x + thickness, y + thickness,
+            x + thickness, y + thickness,
+            x + width, y,
+            x + width, y + thickness,
+
+            x + thickness, y + thickness * 2,
+            x + width * 2 / 3, y + thickness * 2,
+            x + thickness, y + thickness * 3,
+            x + thickness, y + thickness * 3,
+            x + width * 2 / 3, y + thickness * 2,
+            x + width * 2 / 3, y + thickness * 3,
+        ]), this.gl.STATIC_DRAW)
     }
 
     setRectangle(x, y, width, height) {
