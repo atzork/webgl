@@ -43,6 +43,18 @@ const m3 = {
          0,  0, 1
     ],
 
+    identity: [
+        1, 0, 0,
+        0, 1, 0,
+        0, 0, 1
+    ],
+
+    projection: (width, height) => [
+         2 / width, 0,          0,
+         0,        -2 / height, 0,
+        -1,         1,          1
+    ],
+
     multiply: (a, b) => {
         const a00 = a[0 * 3 + 0];
         const a01 = a[0 * 3 + 1];
@@ -107,11 +119,11 @@ export default class Main {
                 positionLocation: this.gl.getAttribLocation(program, 'a_position'),
                 resolutionLocation: this.gl.getUniformLocation(program, 'u_resolution'),
                 colorLocation: this.gl.getUniformLocation(program, 'u_color'),
-                matrixLocalion: this.gl.getUniformLocation(program, 'u_matrix')
+                matrixLocation: this.gl.getUniformLocation(program, 'u_matrix')
             }
             const positionBuffer = this.gl.createBuffer();
             const rectangleSettings = {
-                translation: [400, 450],
+                translation: [300, 300],
                 rotation: getSinCosByAngleDeg(220),
                 scale: [1, 1],
                 x: 10, y: 20,
@@ -123,7 +135,7 @@ export default class Main {
             this.gl.bindBuffer(this.gl.ARRAY_BUFFER, positionBuffer)
             this.setGeometry(rectangleSettings.x, rectangleSettings.y)
             this.drawScene(program, locations, rectangleSettings);
-            // this.animate(program, locations, rectangleSettings, 0)
+            this.animate(program, locations, rectangleSettings, 0)
         })
     }
 
@@ -136,7 +148,7 @@ export default class Main {
                 {...rectangleSettings,
                     rotation: rotation,
                     color: [rotation[0], rotation[1],rotation[1],1],
-                    scale: [scale, scale]
+                    // scale: [scale, scale]
                 })
             angel++;
             if (angel < 360) {
@@ -170,11 +182,28 @@ export default class Main {
         const translationMatrix = m3.translation(rectangleSettings.translation[0], rectangleSettings.translation[1])
         const rotationMatrix = m3.rotation(rectangleSettings.rotation)
         const scaleMatrix = m3.scale(...rectangleSettings.scale)
-        let matrix = m3.multiply(translationMatrix, rotationMatrix)
-        matrix = m3.multiply(matrix, scaleMatrix)
-        this.gl.uniformMatrix3fv(locations.matrixLocalion, false, matrix)
+        const moveOriginalMatrix = m3.translation(50, -75)
 
+        const projectionMatrix = m3.projection(this.gl.canvas.width, this.gl.canvas.height)
+        let matrix = m3.identity;
+        // for (let i = 0; i < 5; i++) {
+        //     matrix = m3.multiply(matrix, translationMatrix)
+        //     matrix = m3.multiply(matrix, rotationMatrix)
+        //     matrix = m3.multiply(matrix, scaleMatrix)
+        //     matrix = m3.multiply(matrix, moveOriginalMatrix)
+        //
+        //     this.gl.uniformMatrix3fv(locations.matrixLocation,false,  matrix)
+        //     this.drawPrimitive(18)
+        // }
+
+        matrix = m3.multiply(matrix, projectionMatrix)
+        matrix = m3.multiply(matrix, translationMatrix)
+        matrix = m3.multiply(matrix, rotationMatrix)
+        matrix = m3.multiply(matrix, scaleMatrix)
+        matrix = m3.multiply(matrix, moveOriginalMatrix)
+        this.gl.uniformMatrix3fv(locations.matrixLocation,false,  matrix)
         this.drawPrimitive(18)
+
     }
 
     setGeometry(x, y) {
