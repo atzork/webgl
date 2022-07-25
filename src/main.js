@@ -31,28 +31,32 @@ const m3 = {
         tx, ty, 1
     ],
 
-    rotation: ([s, c]) =>  [
+    rotation: (s, c) =>  [
             c, -s, 0,
             s,  c, 0,
             0,  0, 1
         ],
 
-    scale: (sx, sy) => [
+    scaling: (sx, sy) => [
         sx,  0, 0,
          0, sy, 0,
          0,  0, 1
-    ],
-
-    identity: [
-        1, 0, 0,
-        0, 1, 0,
-        0, 0, 1
     ],
 
     projection: (width, height) => [
          2 / width, 0,          0,
          0,        -2 / height, 0,
         -1,         1,          1
+    ],
+
+    translate: (m, tx, ty) => m3.multiply(m, m3.translation(tx, ty)),
+    rotate: (m, s, c) => m3.multiply(m, m3.rotation(s, c)),
+    scale: (m, sx, sy) => m3.multiply(m, m3.scaling(sx, sy)),
+
+    identity: [
+        1, 0, 0,
+        0, 1, 0,
+        0, 0, 1
     ],
 
     multiply: (a, b) => {
@@ -180,8 +184,8 @@ export default class Main {
         this.gl.uniform4fv(locations.colorLocation, rectangleSettings.color)
 
         const translationMatrix = m3.translation(rectangleSettings.translation[0], rectangleSettings.translation[1])
-        const rotationMatrix = m3.rotation(rectangleSettings.rotation)
-        const scaleMatrix = m3.scale(...rectangleSettings.scale)
+        const rotationMatrix = m3.rotation(...rectangleSettings.rotation)
+        const scaleMatrix = m3.scaling(...rectangleSettings.scale)
         const moveOriginalMatrix = m3.translation(50, -75)
 
         const projectionMatrix = m3.projection(this.gl.canvas.width, this.gl.canvas.height)
@@ -197,10 +201,10 @@ export default class Main {
         // }
 
         matrix = m3.multiply(matrix, projectionMatrix)
-        matrix = m3.multiply(matrix, translationMatrix)
-        matrix = m3.multiply(matrix, rotationMatrix)
-        matrix = m3.multiply(matrix, scaleMatrix)
-        matrix = m3.multiply(matrix, moveOriginalMatrix)
+        matrix = m3.translate(matrix, rectangleSettings.translation[0], rectangleSettings.translation[1])
+        matrix = m3.rotate(matrix, ...rectangleSettings.rotation)
+        matrix = m3.scale(matrix, ...rectangleSettings.scale)
+        matrix = m3.translate(matrix, 50, -70)
         this.gl.uniformMatrix3fv(locations.matrixLocation,false,  matrix)
         this.drawPrimitive(18)
 
