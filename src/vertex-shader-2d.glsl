@@ -1,20 +1,9 @@
 attribute vec2 a_position;
 
 uniform vec2 u_resolution;
-uniform vec2 u_transition;
-uniform vec2 u_rotation;
-uniform vec2 u_scale;
+uniform mat3 u_matrix;
 void main() {
-    // scaling
-    vec2 scaledPosition = a_position * u_scale;
-
-    // Rotate the position
-    vec2 rotatedPosition = vec2(
-    scaledPosition.x * u_rotation.y + scaledPosition.y * u_rotation.x,
-    scaledPosition.y * u_rotation.y - scaledPosition.x * u_rotation.x);
-
-    // добавляем перенос
-    vec2 position = rotatedPosition + u_transition;
+    vec2 position = (u_matrix * vec3(a_position, 1)).xy;
 
     // преобразуем из пикселей в диапазон 0.0..1.0
     vec2 zeroToOne = position / u_resolution;

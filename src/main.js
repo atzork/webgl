@@ -24,6 +24,58 @@ function getSinCosByAngleDeg(degrees) {
     return [sin, cos]
 }
 
+const m3 = {
+    translation: (tx, ty) => [
+        1,  0,  0,
+        0,  1,  0,
+        tx, ty, 1
+    ],
+
+    rotation: ([s, c]) =>  [
+            c, -s, 0,
+            s,  c, 0,
+            0,  0, 1
+        ],
+
+    scale: (sx, sy) => [
+        sx,  0, 0,
+         0, sy, 0,
+         0,  0, 1
+    ],
+
+    multiply: (a, b) => {
+        const a00 = a[0 * 3 + 0];
+        const a01 = a[0 * 3 + 1];
+        const a02 = a[0 * 3 + 2];
+        const a10 = a[1 * 3 + 0];
+        const a11 = a[1 * 3 + 1];
+        const a12 = a[1 * 3 + 2];
+        const a20 = a[2 * 3 + 0];
+        const a21 = a[2 * 3 + 1];
+        const a22 = a[2 * 3 + 2];
+        const b00 = b[0 * 3 + 0];
+        const b01 = b[0 * 3 + 1];
+        const b02 = b[0 * 3 + 2];
+        const b10 = b[1 * 3 + 0];
+        const b11 = b[1 * 3 + 1];
+        const b12 = b[1 * 3 + 2];
+        const b20 = b[2 * 3 + 0];
+        const b21 = b[2 * 3 + 1];
+        const b22 = b[2 * 3 + 2];
+        return [
+            b00 * a00 + b01 * a10 + b02 * a20,
+            b00 * a01 + b01 * a11 + b02 * a21,
+            b00 * a02 + b01 * a12 + b02 * a22,
+            b10 * a00 + b11 * a10 + b12 * a20,
+            b10 * a01 + b11 * a11 + b12 * a21,
+            b10 * a02 + b11 * a12 + b12 * a22,
+            b20 * a00 + b21 * a10 + b22 * a20,
+            b20 * a01 + b21 * a11 + b22 * a21,
+            b20 * a02 + b21 * a12 + b22 * a22,
+        ];
+    },
+}
+
 export default class Main {
     gl;
 
@@ -55,13 +107,13 @@ export default class Main {
                 positionLocation: this.gl.getAttribLocation(program, 'a_position'),
                 resolutionLocation: this.gl.getUniformLocation(program, 'u_resolution'),
                 colorLocation: this.gl.getUniformLocation(program, 'u_color'),
-                transitionLocation: this.gl.getUniformLocation(program, 'u_transition'),
-                rotationPosition: this.gl.getUniformLocation(program, 'u_rotation')
+                matrixLocalion: this.gl.getUniformLocation(program, 'u_matrix')
             }
             const positionBuffer = this.gl.createBuffer();
             const rectangleSettings = {
                 translation: [400, 450],
                 rotation: getSinCosByAngleDeg(220),
+                scale: [1, 1],
                 x: 10, y: 20,
                 width: 100,
                 height: 30,
@@ -71,18 +123,20 @@ export default class Main {
             this.gl.bindBuffer(this.gl.ARRAY_BUFFER, positionBuffer)
             this.setGeometry(rectangleSettings.x, rectangleSettings.y)
             this.drawScene(program, locations, rectangleSettings);
-            this.animate(program, locations, rectangleSettings, 0)
+            // this.animate(program, locations, rectangleSettings, 0)
         })
     }
 
     animate(program, locations, rectangleSettings, angel) {
         requestAnimationFrame(() => {
             const rotation = getSinCosByAngleDeg(angel)
+            const scale = angel < 180 ? Math.max(angel / 20, 1) : Math.max((360 - angel) / 20, 1)
             this.drawScene(
                 program, locations,
                 {...rectangleSettings,
                     rotation: rotation,
-                    color: [rotation[0], rotation[1],rotation[1],1]
+                    color: [rotation[0], rotation[1],rotation[1],1],
+                    scale: [scale, scale]
                 })
             angel++;
             if (angel < 360) {
@@ -112,8 +166,14 @@ export default class Main {
         this.gl.vertexAttribPointer(locations.positionLocation, size, type, normalize, stride, offset)
         this.gl.uniform2f(locations.resolutionLocation, this.gl.canvas.width, this.gl.canvas.height)
         this.gl.uniform4fv(locations.colorLocation, rectangleSettings.color)
-        this.gl.uniform2fv(locations.transitionLocation, rectangleSettings.translation)
-        this.gl.uniform2fv(locations.rotationPosition, rectangleSettings.rotation)
+
+        const translationMatrix = m3.translation(rectangleSettings.translation[0], rectangleSettings.translation[1])
+        const rotationMatrix = m3.rotation(rectangleSettings.rotation)
+        const scaleMatrix = m3.scale(...rectangleSettings.scale)
+        let matrix = m3.multiply(translationMatrix, rotationMatrix)
+        matrix = m3.multiply(matrix, scaleMatrix)
+        this.gl.uniformMatrix3fv(locations.matrixLocalion, false, matrix)
+
         this.drawPrimitive(18)
     }
 
