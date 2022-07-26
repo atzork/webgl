@@ -4,6 +4,7 @@ import { getSinCosByAngleDeg } from "./utils/math-utils.js";
 
 export default class Main {
     gl;
+    positionBuffer; colorBuffer;
 
     constructor() {
         const canvas = document.getElementById('canvas')
@@ -31,16 +32,15 @@ export default class Main {
             const program = this.createProgram(vertexShader, fragmentShader)
             const locations = {
                 positionLocation: this.gl.getAttribLocation(program, 'a_position'),
-                colorLocation: this.gl.getUniformLocation(program, 'u_color'),
+                colorLocation: this.gl.getAttribLocation(program, 'a_color'),
                 matrixLocation: this.gl.getUniformLocation(program, 'u_matrix')
             }
-            const positionBuffer = this.gl.createBuffer();
             const rectangleSettings = {
                 translation: [300, 300],
                 rotation: getSinCosByAngleDeg(220),
                 scale: [1, 1],
                 translation3D: [300, 300, 1],
-                rotation3D: [getSinCosByAngleDeg(0), getSinCosByAngleDeg(45), getSinCosByAngleDeg(0)],
+                rotation3D: [getSinCosByAngleDeg(20), getSinCosByAngleDeg(20), getSinCosByAngleDeg(20)],
                 scale3D: [1, 1, 1],
                 x: 10, y: 20,
                 width: 100,
@@ -49,34 +49,54 @@ export default class Main {
                 vertex: 16 * 6 // 16 rectangles * 2 triangles * 3 vertex
             }
             this.gl.useProgram(program)
-            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, positionBuffer)
+
             // this.setGeometry(rectangleSettings.x, rectangleSettings.y)
+
+            this.positionBuffer = this.gl.createBuffer();
+            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.positionBuffer)
             this.setGeometryFull3D()
+
+            this.colorBuffer = this.gl.createBuffer();
+            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorBuffer);
+            this.setColors()
+
             this.drawScene(locations, rectangleSettings);
-            this.animate(locations, rectangleSettings, 0)
+            // this.animate(locations, rectangleSettings, 0)
         })
     }
 
     drawScene(locations, rectangleSettings) {
         resizeCanvas(this.gl.canvas);
-        this.clearCanvas()
 
         this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height)
+        this.clearCanvas()
 
+        // position
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.positionBuffer)
+        const positionSize = 3; // 2 -> 2D; 3 -> 3D
+        const positionType = this.gl.FLOAT;
+        const positionNormalize = false;
+        const positionStride = 0;
+        const positionOffset = 0;
         this.gl.enableVertexAttribArray(locations.positionLocation)
+        this.gl.vertexAttribPointer(locations.positionLocation, positionSize, positionType, positionNormalize, positionStride, positionOffset)
+
+        // color
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorBuffer)
+        const colorSize = 3; // 2 -> 2D; 3 -> 3D
+        const colorType = this.gl.UNSIGNED_BYTE;
+        const colorNormalize = true;
+        const colorStride = 0;
+        const colorOffset = 0;
+        this.gl.enableVertexAttribArray(locations.colorLocation)
+        this.gl.vertexAttribPointer(locations.colorLocation, colorSize, colorType, colorNormalize, colorStride, colorOffset)
 
         // this.setRectangle(
         //     rectangleSettings.translation[0], rectangleSettings.translation[0],
         //     rectangleSettings.width, rectangleSettings.height
         // )
 
-        const size = 3; // 2 -> 2D; 3 -> 3D
-        const type = this.gl.FLOAT;
-        const normalize = false;
-        const stride = 0;
-        const offset = 0;
-        this.gl.vertexAttribPointer(locations.positionLocation, size, type, normalize, stride, offset)
-        this.gl.uniform4fv(locations.colorLocation, rectangleSettings.color)
+        // this.gl.uniform4fv(locations.colorLocation, rectangleSettings.color)
 
         // 2D
         // const projectionMatrix = m3.projection(this.gl.canvas.width, this.gl.canvas.height)
@@ -121,6 +141,138 @@ export default class Main {
                 this.animate(locations, rectangleSettings, angel)
             }
         })
+    }
+
+    setColors() {
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Uint8Array([
+            // left column front
+            200,  70, 120,
+            200,  70, 120,
+            200,  70, 120,
+            200,  70, 120,
+            200,  70, 120,
+            200,  70, 120,
+
+            // top rung front
+            200,  70, 120,
+            200,  70, 120,
+            200,  70, 120,
+            200,  70, 120,
+            200,  70, 120,
+            200,  70, 120,
+
+            // middle rung front
+            200,  70, 120,
+            200,  70, 120,
+            200,  70, 120,
+            200,  70, 120,
+            200,  70, 120,
+            200,  70, 120,
+
+            // left column back
+            80, 70, 200,
+            80, 70, 200,
+            80, 70, 200,
+            80, 70, 200,
+            80, 70, 200,
+            80, 70, 200,
+
+            // top rung back
+            80, 70, 200,
+            80, 70, 200,
+            80, 70, 200,
+            80, 70, 200,
+            80, 70, 200,
+            80, 70, 200,
+
+            // middle rung back
+            80, 70, 200,
+            80, 70, 200,
+            80, 70, 200,
+            80, 70, 200,
+            80, 70, 200,
+            80, 70, 200,
+
+            // top
+            70, 200, 210,
+            70, 200, 210,
+            70, 200, 210,
+            70, 200, 210,
+            70, 200, 210,
+            70, 200, 210,
+
+            // top rung right
+            200, 200, 70,
+            200, 200, 70,
+            200, 200, 70,
+            200, 200, 70,
+            200, 200, 70,
+            200, 200, 70,
+
+            // under top rung
+            210, 100, 70,
+            210, 100, 70,
+            210, 100, 70,
+            210, 100, 70,
+            210, 100, 70,
+            210, 100, 70,
+
+            // between top rung and middle
+            210, 160, 70,
+            210, 160, 70,
+            210, 160, 70,
+            210, 160, 70,
+            210, 160, 70,
+            210, 160, 70,
+
+            // top of middle rung
+            70, 180, 210,
+            70, 180, 210,
+            70, 180, 210,
+            70, 180, 210,
+            70, 180, 210,
+            70, 180, 210,
+
+            // right of middle rung
+            100, 70, 210,
+            100, 70, 210,
+            100, 70, 210,
+            100, 70, 210,
+            100, 70, 210,
+            100, 70, 210,
+
+            // bottom of middle rung.
+            76, 210, 100,
+            76, 210, 100,
+            76, 210, 100,
+            76, 210, 100,
+            76, 210, 100,
+            76, 210, 100,
+
+            // right of bottom
+            140, 210, 80,
+            140, 210, 80,
+            140, 210, 80,
+            140, 210, 80,
+            140, 210, 80,
+            140, 210, 80,
+
+            // bottom
+            90, 130, 110,
+            90, 130, 110,
+            90, 130, 110,
+            90, 130, 110,
+            90, 130, 110,
+            90, 130, 110,
+
+            // left side
+            160, 160, 220,
+            160, 160, 220,
+            160, 160, 220,
+            160, 160, 220,
+            160, 160, 220,
+            160, 160, 220
+        ]), this.gl.STATIC_DRAW)
     }
 
     setGeometry(x, y) {
