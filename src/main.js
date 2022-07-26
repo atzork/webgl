@@ -55,13 +55,28 @@ export default class Main {
             this.positionBuffer = this.gl.createBuffer();
             this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.positionBuffer)
             this.setGeometryFull3D()
+            const positionSize = 3; // 2 -> 2D; 3 -> 3D
+            const positionType = this.gl.FLOAT;
+            const positionNormalize = false;
+            const positionStride = 0;
+            const positionOffset = 0;
+            this.gl.enableVertexAttribArray(locations.positionLocation)
+            this.gl.vertexAttribPointer(locations.positionLocation, positionSize, positionType, positionNormalize, positionStride, positionOffset)
+
 
             this.colorBuffer = this.gl.createBuffer();
             this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorBuffer);
             this.setColors()
+            const colorSize = 3; // 2 -> 2D; 3 -> 3D
+            const colorType = this.gl.UNSIGNED_BYTE;
+            const colorNormalize = true;
+            const colorStride = 0;
+            const colorOffset = 0;
+            this.gl.enableVertexAttribArray(locations.colorLocation)
+            this.gl.vertexAttribPointer(locations.colorLocation, colorSize, colorType, colorNormalize, colorStride, colorOffset)
 
             this.drawScene(locations, rectangleSettings);
-            // this.animate(locations, rectangleSettings, 0)
+            this.animate(locations, rectangleSettings, 0)
         })
     }
 
@@ -70,26 +85,6 @@ export default class Main {
 
         this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height)
         this.clearCanvas()
-
-        // position
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.positionBuffer)
-        const positionSize = 3; // 2 -> 2D; 3 -> 3D
-        const positionType = this.gl.FLOAT;
-        const positionNormalize = false;
-        const positionStride = 0;
-        const positionOffset = 0;
-        this.gl.enableVertexAttribArray(locations.positionLocation)
-        this.gl.vertexAttribPointer(locations.positionLocation, positionSize, positionType, positionNormalize, positionStride, positionOffset)
-
-        // color
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorBuffer)
-        const colorSize = 3; // 2 -> 2D; 3 -> 3D
-        const colorType = this.gl.UNSIGNED_BYTE;
-        const colorNormalize = true;
-        const colorStride = 0;
-        const colorOffset = 0;
-        this.gl.enableVertexAttribArray(locations.colorLocation)
-        this.gl.vertexAttribPointer(locations.colorLocation, colorSize, colorType, colorNormalize, colorStride, colorOffset)
 
         // this.setRectangle(
         //     rectangleSettings.translation[0], rectangleSettings.translation[0],
