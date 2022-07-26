@@ -45,45 +45,24 @@ export default class Main {
                 x: 10, y: 20,
                 width: 100,
                 height: 30,
-                color: [Math.random(),Math.random(),Math.random(),1]
+                color: [Math.random(),Math.random(),Math.random(),1],
+                vertex: 16 * 6 // 16 rectangles * 2 triangles * 3 vertex
             }
-
+            this.gl.useProgram(program)
             this.gl.bindBuffer(this.gl.ARRAY_BUFFER, positionBuffer)
-            this.setGeometry(rectangleSettings.x, rectangleSettings.y)
-            this.drawScene(program, locations, rectangleSettings);
-            this.animate(program, locations, rectangleSettings, 0)
+            // this.setGeometry(rectangleSettings.x, rectangleSettings.y)
+            this.setGeometryFull3D()
+            this.drawScene(locations, rectangleSettings);
+            this.animate(locations, rectangleSettings, 0)
         })
     }
 
-    animate(program, locations, rectangleSettings, angel) {
-        requestAnimationFrame(() => {
-            const rotation = getSinCosByAngleDeg(angel)
-            // const scale = angel < 180 ? Math.max(angel / 20, 1) : Math.max((360 - angel) / 20, 1)
-            // const rotation3D = [getSinCosByAngleDeg(angel), rectangleSettings.rotation3D[0], rectangleSettings.rotation3D[2]]
-            // const rotation3D = [rectangleSettings.rotation3D[0], getSinCosByAngleDeg(angel), rectangleSettings.rotation3D[2]]
-            // const rotation3D = [rectangleSettings.rotation3D[0], rectangleSettings.rotation3D[2], getSinCosByAngleDeg(angel)]
-            const rotation3D = [getSinCosByAngleDeg(angel), rectangleSettings.rotation3D[0], getSinCosByAngleDeg(angel)]
-            this.drawScene(
-                program, locations,
-                {...rectangleSettings,
-                    rotation: rotation,
-                    rotation3D: rotation3D,
-                    color: [rotation[0], rotation[1],rotation[1],1],
-                    // scale: [scale, scale]
-                })
-            angel++;
-            if (angel < 360) {
-                this.animate(program, locations, rectangleSettings, angel)
-            }
-        })
-    }
-
-    drawScene(program, locations, rectangleSettings) {
+    drawScene(locations, rectangleSettings) {
         resizeCanvas(this.gl.canvas);
         this.clearCanvas()
 
         this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height)
-        this.gl.useProgram(program)
+
         this.gl.enableVertexAttribArray(locations.positionLocation)
 
         // this.setRectangle(
@@ -118,7 +97,30 @@ export default class Main {
         matrix = m4.scale(matrix, ...rectangleSettings.scale3D)
         this.gl.uniformMatrix4fv(locations.matrixLocation, false, matrix)
 
-        this.drawPrimitive(18)
+        this.drawPrimitive(rectangleSettings.vertex)
+    }
+
+    animate(locations, rectangleSettings, angel) {
+        requestAnimationFrame(() => {
+            const rotation = getSinCosByAngleDeg(angel)
+            // const scale = angel < 180 ? Math.max(angel / 20, 1) : Math.max((360 - angel) / 20, 1)
+            // const rotation3D = [getSinCosByAngleDeg(angel), rectangleSettings.rotation3D[0], rectangleSettings.rotation3D[2]]
+            // const rotation3D = [rectangleSettings.rotation3D[0], getSinCosByAngleDeg(angel), rectangleSettings.rotation3D[2]]
+            // const rotation3D = [rectangleSettings.rotation3D[0], rectangleSettings.rotation3D[2], getSinCosByAngleDeg(angel)]
+            const rotation3D = [getSinCosByAngleDeg(angel), rectangleSettings.rotation3D[0], getSinCosByAngleDeg(angel)]
+            this.drawScene(
+                locations,
+                {...rectangleSettings,
+                    rotation: rotation,
+                    rotation3D: rotation3D,
+                    color: [rotation[0], rotation[1],rotation[1],1],
+                    // scale: [scale, scale]
+                })
+            angel++;
+            if (angel < 360) {
+                this.animate(locations, rectangleSettings, angel)
+            }
+        })
     }
 
     setGeometry(x, y) {
@@ -147,6 +149,137 @@ export default class Main {
             x + width * 2 / 3, y + thickness * 2, 0,
             x + width * 2 / 3, y + thickness * 3, 0,
         ]), this.gl.STATIC_DRAW)
+    }
+
+    setGeometryFull3D() {
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array([
+            // left column front
+            0,   0,  0,
+            30,   0,  0,
+            0, 150,  0,
+            0, 150,  0,
+            30,   0,  0,
+            30, 150,  0,
+
+            // top rung front
+            30,   0,  0,
+            100,   0,  0,
+            30,  30,  0,
+            30,  30,  0,
+            100,   0,  0,
+            100,  30,  0,
+
+            // middle rung front
+            30,  60,  0,
+            67,  60,  0,
+            30,  90,  0,
+            30,  90,  0,
+            67,  60,  0,
+            67,  90,  0,
+
+            // left column back
+            0,   0,  30,
+            30,   0,  30,
+            0, 150,  30,
+            0, 150,  30,
+            30,   0,  30,
+            30, 150,  30,
+
+            // top rung back
+            30,   0,  30,
+            100,   0,  30,
+            30,  30,  30,
+            30,  30,  30,
+            100,   0,  30,
+            100,  30,  30,
+
+            // middle rung back
+            30,  60,  30,
+            67,  60,  30,
+            30,  90,  30,
+            30,  90,  30,
+            67,  60,  30,
+            67,  90,  30,
+
+            // top
+            0,   0,   0,
+            100,   0,   0,
+            100,   0,  30,
+            0,   0,   0,
+            100,   0,  30,
+            0,   0,  30,
+
+            // top rung right
+            100,   0,   0,
+            100,  30,   0,
+            100,  30,  30,
+            100,   0,   0,
+            100,  30,  30,
+            100,   0,  30,
+
+            // under top rung
+            30,   30,   0,
+            30,   30,  30,
+            100,  30,  30,
+            30,   30,   0,
+            100,  30,  30,
+            100,  30,   0,
+
+            // between top rung and middle
+            30,   30,   0,
+            30,   30,  30,
+            30,   60,  30,
+            30,   30,   0,
+            30,   60,  30,
+            30,   60,   0,
+
+            // top of middle rung
+            30,   60,   0,
+            30,   60,  30,
+            67,   60,  30,
+            30,   60,   0,
+            67,   60,  30,
+            67,   60,   0,
+
+            // right of middle rung
+            67,   60,   0,
+            67,   60,  30,
+            67,   90,  30,
+            67,   60,   0,
+            67,   90,  30,
+            67,   90,   0,
+
+            // bottom of middle rung.
+            30,   90,   0,
+            30,   90,  30,
+            67,   90,  30,
+            30,   90,   0,
+            67,   90,  30,
+            67,   90,   0,
+
+            // right of bottom
+            30,   90,   0,
+            30,   90,  30,
+            30,  150,  30,
+            30,   90,   0,
+            30,  150,  30,
+            30,  150,   0,
+
+            // bottom
+            0,   150,   0,
+            0,   150,  30,
+            30,  150,  30,
+            0,   150,   0,
+            30,  150,  30,
+            30,  150,   0,
+
+            // left side
+            0,   0,   0,
+            0,   0,  30,
+            0, 150,  30,
+            0,   0,   0,
+            0, 150,  30,
+            0, 150,   0]), this.gl.STATIC_DRAW)
     }
 
     setRectangle(x, y, width, height) {
