@@ -109,6 +109,19 @@ export const m4 = {
         -1,          1,           0,         1
     ],
 
+    orthographic: function(left, right, bottom, top, near, far) {
+        return [
+            2 / (right - left), 0, 0, 0,
+            0, 2 / (top - bottom), 0, 0,
+            0, 0, 2 / (near - far), 0,
+
+            (left + right) / (left - right),
+            (bottom + top) / (bottom - top),
+            (near + far) / (near - far),
+            1,
+        ];
+    },
+
     translate: (m, tx, ty, tz) => m4.multiply(m, m4.translation(tx, ty, tz)),
     xRotate: (m, s, c) => m4.multiply(m, m4.xRotation(s, c)),
     yRotate: (m, s, c) => m4.multiply(m, m4.yRotation(s, c)),

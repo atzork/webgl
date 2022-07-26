@@ -86,7 +86,15 @@ export default class Main {
         this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height)
         this.clearCanvas()
 
-        let matrix = m4.projection(this.gl.canvas.width, this.gl.canvas.height, 400)
+        const left = 0;
+        const right = this.gl.canvas.clientWidth;
+        const bottom = this.gl.canvas.clientHeight;
+        const top = 0;
+        const near = 400;
+        const far = -400;
+
+        // let matrix = m4.projection(this.gl.canvas.width, this.gl.canvas.height, 400)
+        let matrix =m4.orthographic(left, right, bottom, top, near, far);
         matrix = m4.translate(matrix, ...rectangleSettings.translation3D)
         matrix = m4.xRotate(matrix, ...rectangleSettings.rotation3D[0])
         matrix = m4.yRotate(matrix, ...rectangleSettings.rotation3D[1])
