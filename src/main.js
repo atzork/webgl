@@ -86,24 +86,6 @@ export default class Main {
         this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height)
         this.clearCanvas()
 
-        // this.setRectangle(
-        //     rectangleSettings.translation[0], rectangleSettings.translation[0],
-        //     rectangleSettings.width, rectangleSettings.height
-        // )
-
-        // this.gl.uniform4fv(locations.colorLocation, rectangleSettings.color)
-
-        // 2D
-        // const projectionMatrix = m3.projection(this.gl.canvas.width, this.gl.canvas.height)
-        // let matrix = m3.identity;
-        // matrix = m3.multiply(matrix, projectionMatrix)
-        // matrix = m3.translate(matrix, rectangleSettings.translation[0], rectangleSettings.translation[1])
-        // matrix = m3.rotate(matrix, ...rectangleSettings.rotation)
-        // matrix = m3.scale(matrix, ...rectangleSettings.scale)
-        // matrix = m3.translate(matrix, 50, -70)
-        // this.gl.uniformMatrix3fv(locations.matrixLocation,false,  matrix)
-
-        // 3D
         let matrix = m4.projection(this.gl.canvas.width, this.gl.canvas.height, 400)
         matrix = m4.translate(matrix, ...rectangleSettings.translation3D)
         matrix = m4.xRotate(matrix, ...rectangleSettings.rotation3D[0])
@@ -111,6 +93,9 @@ export default class Main {
         matrix = m4.zRotate(matrix, ...rectangleSettings.rotation3D[2])
         matrix = m4.scale(matrix, ...rectangleSettings.scale3D)
         this.gl.uniformMatrix4fv(locations.matrixLocation, false, matrix)
+
+        this.gl.enable(this.gl.CULL_FACE)
+        this.gl.enable(this.gl.DEPTH_TEST)
 
         this.drawPrimitive(rectangleSettings.vertex)
     }
@@ -302,27 +287,27 @@ export default class Main {
         this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array([
             // left column front
             0,   0,  0,
-            30,   0,  0,
-            0, 150,  0,
             0, 150,  0,
             30,   0,  0,
+            0, 150,  0,
             30, 150,  0,
+            30,   0,  0,
 
             // top rung front
             30,   0,  0,
-            100,   0,  0,
-            30,  30,  0,
             30,  30,  0,
             100,   0,  0,
+            30,  30,  0,
             100,  30,  0,
+            100,   0,  0,
 
             // middle rung front
             30,  60,  0,
-            67,  60,  0,
-            30,  90,  0,
             30,  90,  0,
             67,  60,  0,
+            30,  90,  0,
             67,  90,  0,
+            67,  60,  0,
 
             // left column back
             0,   0,  30,
@@ -374,27 +359,27 @@ export default class Main {
 
             // between top rung and middle
             30,   30,   0,
+            30,   60,  30,
             30,   30,  30,
-            30,   60,  30,
             30,   30,   0,
-            30,   60,  30,
             30,   60,   0,
+            30,   60,  30,
 
             // top of middle rung
             30,   60,   0,
+            67,   60,  30,
             30,   60,  30,
-            67,   60,  30,
             30,   60,   0,
-            67,   60,  30,
             67,   60,   0,
+            67,   60,  30,
 
             // right of middle rung
             67,   60,   0,
+            67,   90,  30,
             67,   60,  30,
-            67,   90,  30,
             67,   60,   0,
-            67,   90,  30,
             67,   90,   0,
+            67,   90,  30,
 
             // bottom of middle rung.
             30,   90,   0,
@@ -406,11 +391,11 @@ export default class Main {
 
             // right of bottom
             30,   90,   0,
+            30,  150,  30,
             30,   90,  30,
-            30,  150,  30,
             30,   90,   0,
-            30,  150,  30,
             30,  150,   0,
+            30,  150,  30,
 
             // bottom
             0,   150,   0,
@@ -452,7 +437,7 @@ export default class Main {
 
     clearCanvas() {
         this.gl.clearColor(0,0,0,0);
-        this.gl.clear(this.gl.COLOR_BUFFER_BIT)
+        this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT)
     }
 
     loadShaderSources() {
