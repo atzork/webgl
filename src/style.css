@@ -4,7 +4,7 @@ body {
 }
 /* растягиваем canvas на всю область просмотра */
 canvas {
-    /*width: 100vw;*/
-    /*height: 100vh;*/
+    width: 100vw;
+    height: 100vh;
     display: block;
 }

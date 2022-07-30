@@ -78,15 +78,15 @@ export default class Main {
         const near = 400;
         const far = -400;
         // let matrix = m4.projection(this.gl.canvas.width, this.gl.canvas.height, 400)
-        let matrix =m4.orthographic(left, right, bottom, top, near, far);
+        // let matrix = m4.orthographic(left, right, bottom, top, near, far);
+        let matrix = m4.perspective(rectangleSettings.fudgeFactor);
+        matrix = m4.multiply(matrix, m4.projection(this.gl.canvas.width, this.gl.canvas.height, 400))
         matrix = m4.translate(matrix, ...rectangleSettings.translation3D)
         matrix = m4.xRotate(matrix, rectangleSettings.rotation3D[0])
         matrix = m4.yRotate(matrix, rectangleSettings.rotation3D[1])
         matrix = m4.zRotate(matrix, rectangleSettings.rotation3D[2])
         matrix = m4.scale(matrix, ...rectangleSettings.scale3D)
         this.gl.uniformMatrix4fv(locations.matrixLocation, false, matrix)
-
-        this.gl.uniform1f(locations.fudgeLocation, rectangleSettings.fudgeFactor)
 
         this.gl.enable(this.gl.CULL_FACE)
         this.gl.enable(this.gl.DEPTH_TEST)

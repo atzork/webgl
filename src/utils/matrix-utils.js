@@ -116,6 +116,13 @@ export const m4 = {
         0,  0,  0,  1
     ],
 
+    perspective: (fudgeFactor) => [
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, fudgeFactor,
+        0, 0, 0, 1
+    ],
+
     projection: (width, height, depth) => [
         2 / width,  0,           0,         0,
         0,         -2 / height,  0,         0,
