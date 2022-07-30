@@ -33,7 +33,8 @@ export default class Main {
             const locations = {
                 positionLocation: this.gl.getAttribLocation(program, 'a_position'),
                 colorLocation: this.gl.getAttribLocation(program, 'a_color'),
-                matrixLocation: this.gl.getUniformLocation(program, 'u_matrix')
+                matrixLocation: this.gl.getUniformLocation(program, 'u_matrix'),
+                fudgeLocation: this.gl.getUniformLocation(program, 'u_fudgeFactor')
             }
             const rectangleSettings = {
                 translation: [300, 300],
@@ -46,7 +47,9 @@ export default class Main {
                 width: 100,
                 height: 30,
                 color: [Math.random(),Math.random(),Math.random(),1],
-                vertex: 16 * 6 // 16 rectangles * 2 triangles * 3 vertex
+
+                vertex: 16 * 6, // 16 rectangles * 2 triangles * 3 vertex
+                fudgeFactor: 1
             }
             this.gl.useProgram(program)
 
@@ -62,7 +65,6 @@ export default class Main {
             const positionOffset = 0;
             this.gl.enableVertexAttribArray(locations.positionLocation)
             this.gl.vertexAttribPointer(locations.positionLocation, positionSize, positionType, positionNormalize, positionStride, positionOffset)
-
 
             this.colorBuffer = this.gl.createBuffer();
             this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorBuffer);
@@ -86,13 +88,14 @@ export default class Main {
         this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height)
         this.clearCanvas()
 
+        this.gl.uniform1f(locations.fudgeLocation, rectangleSettings.fudgeFactor)
+
         const left = 0;
         const right = this.gl.canvas.clientWidth;
         const bottom = this.gl.canvas.clientHeight;
         const top = 0;
         const near = 400;
         const far = -400;
-
         // let matrix = m4.projection(this.gl.canvas.width, this.gl.canvas.height, 400)
         let matrix =m4.orthographic(left, right, bottom, top, near, far);
         matrix = m4.translate(matrix, ...rectangleSettings.translation3D)
@@ -101,6 +104,7 @@ export default class Main {
         matrix = m4.zRotate(matrix, ...rectangleSettings.rotation3D[2])
         matrix = m4.scale(matrix, ...rectangleSettings.scale3D)
         this.gl.uniformMatrix4fv(locations.matrixLocation, false, matrix)
+
 
         this.gl.enable(this.gl.CULL_FACE)
         this.gl.enable(this.gl.DEPTH_TEST)
