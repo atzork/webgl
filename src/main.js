@@ -5,6 +5,7 @@ import { getSinCosByAngleDeg } from "./utils/math-utils.js";
 export default class Main {
     gl;
     positionBuffer; colorBuffer;
+    locations; rectangleSettings;
 
     constructor() {
         const canvas = document.getElementById('canvas')
@@ -25,18 +26,20 @@ export default class Main {
 
         this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);
 
+        this.handleEvents(this.gl.canvas);
+
         this.loadShaderSources().then(([vertexShaderSource, fragmentShaderSource]) => {
             const vertexShader = this.createShader(this.gl.VERTEX_SHADER, vertexShaderSource);
             const fragmentShader = this.createShader(this.gl.FRAGMENT_SHADER, fragmentShaderSource)
 
             const program = this.createProgram(vertexShader, fragmentShader)
-            const locations = {
+            this.locations = {
                 positionLocation: this.gl.getAttribLocation(program, 'a_position'),
                 colorLocation: this.gl.getAttribLocation(program, 'a_color'),
                 matrixLocation: this.gl.getUniformLocation(program, 'u_matrix'),
                 fudgeLocation: this.gl.getUniformLocation(program, 'u_fudgeFactor')
             }
-            const rectangleSettings = {
+            this.rectangleSettings = {
                 translation: [300, 300],
                 rotation: getSinCosByAngleDeg(220),
                 scale: [1, 1],
@@ -53,32 +56,11 @@ export default class Main {
             }
             this.gl.useProgram(program)
 
-            // this.setGeometry(rectangleSettings.x, rectangleSettings.y)
+            this.initPositionLocation(this.locations.positionLocation)
+            this.initColorLocation(this.locations.colorLocation)
 
-            this.positionBuffer = this.gl.createBuffer();
-            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.positionBuffer)
-            this.setGeometryFull3D()
-            const positionSize = 3; // 2 -> 2D; 3 -> 3D
-            const positionType = this.gl.FLOAT;
-            const positionNormalize = false;
-            const positionStride = 0;
-            const positionOffset = 0;
-            this.gl.enableVertexAttribArray(locations.positionLocation)
-            this.gl.vertexAttribPointer(locations.positionLocation, positionSize, positionType, positionNormalize, positionStride, positionOffset)
-
-            this.colorBuffer = this.gl.createBuffer();
-            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorBuffer);
-            this.setColors()
-            const colorSize = 3; // 2 -> 2D; 3 -> 3D
-            const colorType = this.gl.UNSIGNED_BYTE;
-            const colorNormalize = true;
-            const colorStride = 0;
-            const colorOffset = 0;
-            this.gl.enableVertexAttribArray(locations.colorLocation)
-            this.gl.vertexAttribPointer(locations.colorLocation, colorSize, colorType, colorNormalize, colorStride, colorOffset)
-
-            this.drawScene(locations, rectangleSettings);
-            this.animate(locations, rectangleSettings, 0)
+            this.drawScene(this.locations, this.rectangleSettings);
+            this.animate()
         })
     }
 
@@ -112,25 +94,95 @@ export default class Main {
         this.drawPrimitive(rectangleSettings.vertex)
     }
 
-    animate(locations, rectangleSettings, angel) {
+    initPositionLocation(positionLocation) {
+        this.positionBuffer = this.gl.createBuffer();
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.positionBuffer)
+        this.setGeometryFull3D()
+        const positionSize = 3; // 2 -> 2D; 3 -> 3D
+        const positionType = this.gl.FLOAT;
+        const positionNormalize = false;
+        const positionStride = 0;
+        const positionOffset = 0;
+        this.gl.enableVertexAttribArray(positionLocation)
+        this.gl.vertexAttribPointer(positionLocation, positionSize, positionType, positionNormalize, positionStride, positionOffset)
+    }
+
+    initColorLocation(colorLocation) {
+        this.colorBuffer = this.gl.createBuffer();
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorBuffer);
+        this.setColors()
+        const colorSize = 3; // 2 -> 2D; 3 -> 3D
+        const colorType = this.gl.UNSIGNED_BYTE;
+        const colorNormalize = true;
+        const colorStride = 0;
+        const colorOffset = 0;
+        this.gl.enableVertexAttribArray(colorLocation)
+        this.gl.vertexAttribPointer(colorLocation, colorSize, colorType, colorNormalize, colorStride, colorOffset)
+    }
+
+    animate(angel = 0) {
         requestAnimationFrame(() => {
-            const rotation = getSinCosByAngleDeg(angel)
+            this.rectangleSettings.rotation = getSinCosByAngleDeg(angel)
             // const scale = angel < 180 ? Math.max(angel / 20, 1) : Math.max((360 - angel) / 20, 1)
             // const rotation3D = [getSinCosByAngleDeg(angel), rectangleSettings.rotation3D[0], rectangleSettings.rotation3D[2]]
             // const rotation3D = [rectangleSettings.rotation3D[0], getSinCosByAngleDeg(angel), rectangleSettings.rotation3D[2]]
             // const rotation3D = [rectangleSettings.rotation3D[0], rectangleSettings.rotation3D[2], getSinCosByAngleDeg(angel)]
-            const rotation3D = [getSinCosByAngleDeg(angel), rectangleSettings.rotation3D[0], getSinCosByAngleDeg(angel)]
-            this.drawScene(
-                locations,
-                {...rectangleSettings,
-                    rotation: rotation,
-                    rotation3D: rotation3D,
-                    color: [rotation[0], rotation[1],rotation[1],1],
-                    // scale: [scale, scale]
-                })
+            this.rectangleSettings.rotation3D = [
+                getSinCosByAngleDeg(angel),
+                this.rectangleSettings.rotation3D[1],
+                getSinCosByAngleDeg(angel),
+            ]
+            this.rectangleSettings.color = [
+                this.rectangleSettings.rotation[0],
+                this.rectangleSettings.rotation[1],
+                this.rectangleSettings.rotation[1],
+                1
+            ]
+            this.drawScene(this.locations,this.rectangleSettings)
             angel++;
             if (angel < 360) {
-                this.animate(locations, rectangleSettings, angel)
+                this.animate(angel)
+            }
+        })
+    }
+
+    handleEvents() {
+        document.addEventListener('keydown', (event) => {
+            switch (event.code) {
+                case 'ArrowUp':
+                    event.preventDefault();
+                    requestAnimationFrame(() => {
+                        this.rectangleSettings.translation3D[2] += 10
+                        this.drawScene(this.locations, this.rectangleSettings);
+                    })
+                    break
+                case 'ArrowDown':
+                    event.preventDefault();
+                    requestAnimationFrame(() => {
+                        this.rectangleSettings.translation3D[2] -= 10
+                        this.drawScene(this.locations, this.rectangleSettings);
+                    })
+                    break
+                case 'ArrowLeft':
+                    event.preventDefault();
+                    requestAnimationFrame(() => {
+                        const [s, c] = getSinCosByAngleDeg(3);
+                        this.rectangleSettings.rotation3D[2][0] -= s;
+                        this.rectangleSettings.rotation3D[2][1] += c;
+                        this.drawScene(this.locations, this.rectangleSettings);
+                    })
+                    break
+                case 'ArrowRight':
+                    event.preventDefault();
+                    requestAnimationFrame(() => {
+                        const [s, c] = getSinCosByAngleDeg(3);
+                        this.rectangleSettings.rotation3D[2][0] += s
+                        this.rectangleSettings.rotation3D[2][1] -= c
+                        this.drawScene(this.locations, this.rectangleSettings);
+                    })
+                    break
+                default:
+                    break
             }
         })
     }
