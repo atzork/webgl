@@ -1,3 +1,5 @@
+import {getSinCosByAngleDeg} from "./math-utils.js";
+
 export const m3 = {
     translation: (tx, ty) => [
         1,  0,  0,
@@ -5,11 +7,14 @@ export const m3 = {
         tx, ty, 1
     ],
 
-    rotation: (s, c) =>  [
-        c, -s, 0,
-        s,  c, 0,
-        0,  0, 1
-    ],
+    rotation: (deg) => {
+        const [s, c] = getSinCosByAngleDeg(deg)
+        return [
+            c, -s, 0,
+            s, c, 0,
+            0, 0, 1
+        ]
+    },
 
     scaling: (sx, sy) => [
         sx,  0, 0,
@@ -24,7 +29,7 @@ export const m3 = {
     ],
 
     translate: (m, tx, ty) => m3.multiply(m, m3.translation(tx, ty)),
-    rotate: (m, s, c) => m3.multiply(m, m3.rotation(s, c)),
+    rotate: (m, deg) => m3.multiply(m, m3.rotation(deg)),
     scale: (m, sx, sy) => m3.multiply(m, m3.scaling(sx, sy)),
 
     identity: [
@@ -74,26 +79,35 @@ export const m4 = {
         tx, ty, tz, 1,
     ],
 
-    xRotation: (s, c) =>  [
-        1,  0, 0, 0,
-        0,  c, s, 0,
-        0, -s, c, 0,
-        0,  0, 0, 1
-    ],
+    xRotation: (deg) => {
+        const [s, c] = getSinCosByAngleDeg(deg)
+        return [
+            1, 0, 0, 0,
+            0, c, s, 0,
+            0, -s, c, 0,
+            0, 0, 0, 1
+        ]
+    },
 
-    yRotation: (s, c) =>  [
-        c, 0, -s, 0,
-        0, 1,  0, 0,
-        s, 0,  c, 0,
-        0, 0,  0, 1
-    ],
+    yRotation: (deg) => {
+        const [s, c] = getSinCosByAngleDeg(deg)
+        return [
+            c, 0, -s, 0,
+            0, 1, 0, 0,
+            s, 0, c, 0,
+            0, 0, 0, 1
+        ]
+    },
 
-    zRotation: (s, c) =>  [
-        c, s, 0, 0,
-        -s, c, 0, 0,
-        0, 0, 1, 0,
-        0, 0, 0, 1
-    ],
+    zRotation: (deg) => {
+        const [s, c] = getSinCosByAngleDeg(deg)
+        return [
+            c, s, 0, 0,
+            -s, c, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1
+        ]
+    },
 
     scaling: (sx, sy, sz) => [
         sx, 0,  0,  0,

@@ -1,4 +1,9 @@
 export function resizeCanvas(canvas) {
+
+    canvas.width  = 500;
+    canvas.height = 500;
+    return
+
     // получаем размер HTML-элемента canvas
     const displayWidth  = canvas.clientWidth;
     const displayHeight = canvas.clientHeight;

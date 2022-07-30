@@ -41,10 +41,10 @@ export default class Main {
             }
             this.rectangleSettings = {
                 translation: [300, 300],
-                rotation: getSinCosByAngleDeg(220),
+                rotation: 220,
                 scale: [1, 1],
                 translation3D: [300, 300, 1],
-                rotation3D: [getSinCosByAngleDeg(20), getSinCosByAngleDeg(20), getSinCosByAngleDeg(20)],
+                rotation3D: [20, 20, 20],
                 scale3D: [1, 1, 1],
                 x: 10, y: 20,
                 width: 100,
@@ -70,7 +70,6 @@ export default class Main {
         this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height)
         this.clearCanvas()
 
-        this.gl.uniform1f(locations.fudgeLocation, rectangleSettings.fudgeFactor)
 
         const left = 0;
         const right = this.gl.canvas.clientWidth;
@@ -81,12 +80,13 @@ export default class Main {
         // let matrix = m4.projection(this.gl.canvas.width, this.gl.canvas.height, 400)
         let matrix =m4.orthographic(left, right, bottom, top, near, far);
         matrix = m4.translate(matrix, ...rectangleSettings.translation3D)
-        matrix = m4.xRotate(matrix, ...rectangleSettings.rotation3D[0])
-        matrix = m4.yRotate(matrix, ...rectangleSettings.rotation3D[1])
-        matrix = m4.zRotate(matrix, ...rectangleSettings.rotation3D[2])
+        matrix = m4.xRotate(matrix, rectangleSettings.rotation3D[0])
+        matrix = m4.yRotate(matrix, rectangleSettings.rotation3D[1])
+        matrix = m4.zRotate(matrix, rectangleSettings.rotation3D[2])
         matrix = m4.scale(matrix, ...rectangleSettings.scale3D)
         this.gl.uniformMatrix4fv(locations.matrixLocation, false, matrix)
 
+        this.gl.uniform1f(locations.fudgeLocation, rectangleSettings.fudgeFactor)
 
         this.gl.enable(this.gl.CULL_FACE)
         this.gl.enable(this.gl.DEPTH_TEST)
@@ -122,20 +122,21 @@ export default class Main {
 
     animate(angel = 0) {
         requestAnimationFrame(() => {
-            this.rectangleSettings.rotation = getSinCosByAngleDeg(angel)
+            this.rectangleSettings.rotation = angel
             // const scale = angel < 180 ? Math.max(angel / 20, 1) : Math.max((360 - angel) / 20, 1)
             // const rotation3D = [getSinCosByAngleDeg(angel), rectangleSettings.rotation3D[0], rectangleSettings.rotation3D[2]]
             // const rotation3D = [rectangleSettings.rotation3D[0], getSinCosByAngleDeg(angel), rectangleSettings.rotation3D[2]]
             // const rotation3D = [rectangleSettings.rotation3D[0], rectangleSettings.rotation3D[2], getSinCosByAngleDeg(angel)]
             this.rectangleSettings.rotation3D = [
-                getSinCosByAngleDeg(angel),
+                angel,
                 this.rectangleSettings.rotation3D[1],
-                getSinCosByAngleDeg(angel),
+                angel,
             ]
+            const [r, g] = getSinCosByAngleDeg(angel)
             this.rectangleSettings.color = [
-                this.rectangleSettings.rotation[0],
-                this.rectangleSettings.rotation[1],
-                this.rectangleSettings.rotation[1],
+                r,
+                g,
+                g,
                 1
             ]
             this.drawScene(this.locations,this.rectangleSettings)
@@ -166,18 +167,14 @@ export default class Main {
                 case 'ArrowLeft':
                     event.preventDefault();
                     requestAnimationFrame(() => {
-                        const [s, c] = getSinCosByAngleDeg(3);
-                        this.rectangleSettings.rotation3D[2][0] -= s;
-                        this.rectangleSettings.rotation3D[2][1] += c;
+                        this.rectangleSettings.rotation3D[2] += 1;
                         this.drawScene(this.locations, this.rectangleSettings);
                     })
                     break
                 case 'ArrowRight':
                     event.preventDefault();
                     requestAnimationFrame(() => {
-                        const [s, c] = getSinCosByAngleDeg(3);
-                        this.rectangleSettings.rotation3D[2][0] += s
-                        this.rectangleSettings.rotation3D[2][1] -= c
+                        this.rectangleSettings.rotation3D[2] -= 1;
                         this.drawScene(this.locations, this.rectangleSettings);
                     })
                     break
